@@ -1,125 +1,134 @@
 # S2 Voice Studio
 
-本地优先的专业 WebUI，面向 Fish Audio `s2.1-pro-free` TTS。首屏就是可操作的 TTS 工作台，不做营销首页。所有 Fish Audio API 调用都经服务端 API route 代理，**API Key 永远不会暴露到浏览器**。
+English | [简体中文](README-zh.md)
 
-## 技术栈
+A local-first professional WebUI for Fish Audio `s2.1-pro-free` TTS. The first screen is an actionable TTS workbench, not a marketing landing page. All Fish Audio API calls are proxied through server API routes, so the **API key is never exposed to the browser**.
+
+## Tech Stack
 
 - **Next.js 14** (App Router) + **TypeScript**
-- **Tailwind CSS** + **shadcn/ui** 风格组件 + **lucide-react**
-- **zod** 表单/请求校验，**@msgpack/msgpack** 处理二进制 TTS（即时克隆）
-- **IndexedDB** (via `idb`) 保存历史、参数预设、收藏 voice id；**localStorage** 保存 UI 偏好
-- **JSZip** 批量结果打包导出
+- **Tailwind CSS** + **shadcn/ui-style** components + **lucide-react**
+- **zod** for form/request validation, **@msgpack/msgpack** for binary TTS payloads used by instant cloning
+- **IndexedDB** (via `idb`) for history, parameter presets, and favorite voice IDs; **localStorage** for UI preferences
+- **JSZip** for exporting batch results
 
-## 安装
+## Installation
 
-需要 Node.js ≥ 20 和 pnpm。
+Requires Node.js ≥ 20 and pnpm.
 
 ```bash
 pnpm install
 cp .env.example .env.local
-# 编辑 .env.local，填入 FISH_API_KEY
+# Edit .env.local and set FISH_API_KEY
 ```
 
-`.env.local` 示例：
+Example `.env.local`:
 
 ```env
 FISH_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-# 可选
+# Optional
 # FISH_API_BASE=https://api.fish.audio
 # FISH_DEFAULT_MODEL=s2.1-pro-free
 ```
 
-## 启动
+## Run
 
 ```bash
-pnpm dev      # 开发模式 http://localhost:3000
-pnpm build    # 生产构建
-pnpm start    # 生产启动
-pnpm lint     # ESLint
+pnpm dev       # Development server: http://localhost:3000
+pnpm build     # Production build
+pnpm start     # Start production server
+pnpm lint      # ESLint
 pnpm typecheck # tsc --noEmit
 ```
 
-## 主要功能
+## Features
 
-### TTS 工作台
-- **普通生成**：调用 `/api/fish/tts` → Fish `POST /v1/tts`，返回音频 blob。
-- **HTTP 流式生成**：同一端点 chunked response，前端边接收边缓冲，完成后播放/下载。
-- **带时间戳生成**：`/api/fish/tts-with-timestamp` → Fish `POST /v1/tts/stream/with-timestamp`，解析 SSE `data:` 事件。每个事件含 `audio_base64`、`content`、`alignment`、`chunk_seq`、`chunk_audio_offset_sec`。
-  - **audio 按到达顺序拼接**；**alignment 按 `chunk_seq` 替换最新快照**（不重复 append）。
-  - 生成时间轴表格，支持导出 **JSON / SRT / VTT**。
-- **长文本批量**：按段落/句子/字符拆分，并发默认 1、最大 5；遇 429/5xx 指数退避；导出 zip 含音频、`metadata.json`、`payload.json`。
+### TTS Workbench
 
-### 表单参数（全覆盖）
-`text`、`reference_id`、`temperature`(0-1, 0.7)、`top_p`(0-1, 0.7)、`prosody.speed`(0.5-2, 1)、`prosody.volume`(-20~20 dB, 0)、`prosody.normalize_loudness`(true)、`chunk_length`(100-300, 300)、`min_chunk_length`(0-100, 50)、`normalize`(true)、`format`(mp3/wav/pcm/opus)、`sample_rate`(按格式限制)、`mp3_bitrate`(64/128/192)、`opus_bitrate`(-1000/24000/32000/48000/64000)、`latency`(normal/balanced/low)、`max_new_tokens`(1024)、`repetition_penalty`(1.2)、`condition_on_previous_chunks`(true)、`early_stop_threshold`(0-1, 1)。
+- **Standard generation**: calls `/api/fish/tts` → Fish `POST /v1/tts`, returns an audio blob.
+- **HTTP streaming generation**: uses the same endpoint with a chunked response; the browser buffers chunks as they arrive, then plays/downloads the final audio.
+- **Timestamp generation**: `/api/fish/tts-with-timestamp` → Fish `POST /v1/tts/stream/with-timestamp`, parses SSE `data:` events. Each event may include `audio_base64`, `content`, `alignment`, `chunk_seq`, and `chunk_audio_offset_sec`.
+  - **Audio is concatenated in arrival order**; **alignment snapshots are replaced by `chunk_seq`** instead of appended repeatedly.
+  - Generates a timeline table and supports **JSON / SRT / VTT** export.
+- **Long-text batching**: split by paragraph/sentence/character count; default concurrency is 1 and max is 5; exponential backoff for 429/5xx; zip export includes audio files, `metadata.json`, and `payload.json`.
 
-> `model` 是 **header** 不是 body 字段。默认 `s2.1-pro-free`，高级设置可切 `s2.1-pro`/`s2-pro`/`s1`。请求前去掉 undefined/null/空字符串字段，但保留显式 `false`/`0`。
+### Full TTS Parameter Coverage
 
-### 声音功能
-- 声音选择区：默认声音、手动输入 `reference_id`、模型库搜索、我的声音、收藏列表。
-- `GET /model` 支持 `page_size`/`page_number`/`title`/`tag`/`self`/`author_id`/`language`/`title_language`/`sort_by=score|task_count|created_at`。
-- 模型卡：展示 `_id`/title/state/languages/visibility/tags/author/samples/task_count/like_count；支持复制 id、设为当前 voice、试听 sample。
-- **持久克隆**：`POST /model` multipart/form-data（服务端组装 boundary），字段含 `type=tts`/`title`/`description`/`visibility`/`train_mode=fast`/`voices` 多文件/`texts`/`tags`/`enhance_audio_quality`(true)/`generate_sample`(false)。
-- **模型管理**：`GET /model/{id}`、`PATCH`（title/description/visibility/tags/cover_image）、`DELETE`（**二次确认**）。
-- **即时克隆**：上传 10–30 秒清晰参考音频 + 精确 transcript，通过 `references` 传给 TTS；JSON 不能传 raw binary，请求由服务端用 **MessagePack** 转发。
+`text`, `reference_id`, `temperature`(0-1, 0.7), `top_p`(0-1, 0.7), `prosody.speed`(0.5-2, 1), `prosody.volume`(-20~20 dB, 0), `prosody.normalize_loudness`(true), `chunk_length`(100-300, 300), `min_chunk_length`(0-100, 50), `normalize`(true), `format`(mp3/wav/pcm/opus), `sample_rate`(format-limited), `mp3_bitrate`(64/128/192), `opus_bitrate`(-1000/24000/32000/48000/64000), `latency`(normal/balanced/low), `max_new_tokens`(1024), `repetition_penalty`(1.2), `condition_on_previous_chunks`(true), and `early_stop_threshold`(0-1, 1).
 
-### 文本编辑器
-- 情绪/语气标签插入器（S2 方括号）：`[happy] [sad] [angry] [excited] [whispering] [shouting] [laughing] [sighing] [gasping] [break] [long-break]`。
-- 自然语言 bracket cue：`[whispers sweetly]`、`[laughing nervously]`。
-- 中文音素模板：`<|phoneme_start|>gong1<|phoneme_end|>`（一字/一音节一个 tag）。
-- 英文音素模板：CMU Arpabet，如 `<|phoneme_start|>EH1 N JH AH0 N IH1 R<|phoneme_end|>`。
-- 多说话人：`<|speaker:0|>` / `<|speaker:1|>` + reference_id 数组（UI 提示多说话人主要面向 `s2-pro`，对 `s2.1-pro-free` 需实测）。
-- 显示 UTF-8 byte 估算（计费按 M UTF-8 bytes；`s2.1-pro-free` 显示 $0/M bytes 但带 fair-use 提示）。
+> `model` is a **header**, not a body field. The default is `s2.1-pro-free`; advanced settings can switch to `s2.1-pro`, `s2-pro`, or `s1`. Before requests are sent, undefined/null/empty-string fields are removed while explicit `false` and `0` values are preserved.
 
-### 输出与历史
-- 每次生成保存：文本、参数、voice id、模型 header、耗时、响应大小、音频 blob/url、错误、时间戳 alignment。
-- 播放器：播放/暂停/进度条/下载/重新生成/复制请求 JSON/复制 cURL。
-- 错误处理：401/402/422/429，优先展示 Fish 返回的 `{status,message}`。
+### Voice Features
 
-### 预设（内置）
-旁白、客服、播客、低延迟对话、有声书、中文纠音、英文品牌名纠音；可另存自定义预设到 IndexedDB。
+- Voice picker: default voices, manual `reference_id`, model library search, own voices, and favorites.
+- `GET /model` supports `page_size`/`page_number`/`title`/`tag`/`self`/`author_id`/`language`/`title_language`/`sort_by=score|task_count|created_at`.
+- Model cards display `_id`/title/state/languages/visibility/tags/author/samples/task_count/like_count and support copying IDs, setting the current voice, and previewing samples.
+- **Persistent cloning**: `POST /model` multipart/form-data assembled on the server. Fields include `type=tts`/`title`/`description`/`visibility`/`train_mode=fast`/multiple `voices` files/`texts`/`tags`/`enhance_audio_quality`(true)/`generate_sample`(false).
+- **Model management**: `GET /model/{id}`, `PATCH` (title/description/visibility/tags/cover_image), and `DELETE` with a second confirmation.
+- **Instant cloning**: upload a clear 10–30 second reference audio file plus an accurate transcript, then pass `references` into TTS. JSON cannot carry raw binary, so the server forwards the request using **MessagePack**.
 
-### 可选 Tab
-- **Voice Design**：`POST /v1/voice-design`，header `model: voice-design-1`；字段 `instruction`(1-2000)/`reference_text`(≤150)/`language`/`n`(1-4)/`speed`(0-3)/`num_step`(1-128)/`guidance_scale`/`instruct_guidance_scale`/`seed`；返回候选 `audio_base64`。**独立计费，非免费 TTS**。
-- **ASR**：`POST /v1/asr` 上传音频获取 transcript，用于声音克隆文本。**独立计费**。
+### Text Editor
 
-## Mock 模式
+- Emotion/tone tag inserter for S2 bracket tags: `[happy] [sad] [angry] [excited] [whispering] [shouting] [laughing] [sighing] [gasping] [break] [long-break]`.
+- Natural-language bracket cues: `[whispers sweetly]`, `[laughing nervously]`.
+- Chinese phoneme template: `<|phoneme_start|>gong1<|phoneme_end|>` (one tag per character/syllable).
+- English phoneme template: CMU Arpabet, such as `<|phoneme_start|>EH1 N JH AH0 N IH1 R<|phoneme_end|>`.
+- Multi-speaker tags: `<|speaker:0|>` / `<|speaker:1|>` + a `reference_id` array. The UI notes that multi-speaker usage is mainly intended for `s2-pro` and should be tested with `s2.1-pro-free`.
+- Shows estimated UTF-8 bytes for billing. `s2.1-pro-free` is displayed as $0/M bytes with a fair-use note.
 
-未配置 `FISH_API_KEY` 时 UI 仍可打开，显示配置提示，Mock 模式可演示表单、历史、批量、时间轴等流程（生成静音占位音频）。右上角开关可手动切换 Mock。配置 Key 并重启 dev server 后即可真实调用。
+### Output and History
 
-## 安全说明
+- Each generation saves text, parameters, voice ID, model header, duration, response size, audio blob/url, errors, and timestamp alignment.
+- Player: play/pause/progress/download/regenerate/copy request JSON/copy cURL.
+- Error handling: 401/402/422/429, prioritizing Fish responses shaped like `{status,message}`.
 
-- `FISH_API_KEY` 仅在服务端 (`process.env.FISH_API_KEY`) 读取，所有 Fish 调用走 `/api/fish/*` API route 代理。
-- 前端代码**绝不含** API Key；`next.config.mjs` 未开启任何会把 env 暴露给 client 的配置。
-- cURL 复制使用 `$FISH_API_KEY` 占位符，不会泄露真实 Key。
+### Built-in Presets
 
-## 验收
+Narration, customer support, podcast, low-latency conversation, audiobook, Chinese pronunciation correction, and English brand-name pronunciation correction. Custom presets can be saved to IndexedDB.
+
+### Optional Tabs
+
+- **Voice Design**: `POST /v1/voice-design`, header `model: voice-design-1`; fields include `instruction`(1-2000), `reference_text`(≤150), `language`, `n`(1-4), `speed`(0-3), `num_step`(1-128), `guidance_scale`, `instruct_guidance_scale`, and `seed`; returns candidate `audio_base64`. **Separately billed, not free TTS**.
+- **ASR**: `POST /v1/asr` uploads audio and returns a transcript for voice cloning. **Separately billed**.
+
+## Mock Mode
+
+If `FISH_API_KEY` is not configured, the UI still opens and shows a configuration notice. Mock mode can demonstrate forms, history, batching, timelines, and related flows using silent placeholder audio. The top-right switch can manually toggle Mock mode. After setting the key and restarting the dev server, real API calls are enabled.
+
+## Security Notes
+
+- `FISH_API_KEY` is read only on the server (`process.env.FISH_API_KEY`), and all Fish calls go through `/api/fish/*` API route proxies.
+- Client code **never includes** the API key; `next.config.mjs` does not expose env variables to the client.
+- Copied cURL commands use a `$FISH_API_KEY` placeholder and do not leak the real key.
+
+## Verification
 
 ```bash
 pnpm lint && pnpm typecheck && pnpm build
 ```
 
-均需通过。有 `FISH_API_KEY` 时，工作台输入短文本生成 mp3 可在浏览器播放/下载。
+All checks should pass. With `FISH_API_KEY` configured, entering short text in the workbench should generate an MP3 that can be played and downloaded in the browser.
 
-## Fish Audio 官方文档
+## Fish Audio Official Docs
 
-- 模型概览：https://docs.fish.audio/developer-guide/models-pricing/models-overview
-- 能力总览：https://docs.fish.audio/overview/capabilities
-- OpenAPI：https://api.fish.audio/openapi.json
-- TTS：https://docs.fish.audio/developer-guide/api-reference/tts
-- Voice Model：https://docs.fish.audio/developer-guide/api-reference/model
-- Voice Design：https://docs.fish.audio/developer-guide/api-reference/voice-design
-- ASR：https://docs.fish.audio/developer-guide/api-reference/asr
+- Models overview: https://docs.fish.audio/developer-guide/models-pricing/models-overview
+- Capabilities overview: https://docs.fish.audio/overview/capabilities
+- OpenAPI: https://api.fish.audio/openapi.json
+- TTS: https://docs.fish.audio/developer-guide/api-reference/tts
+- Voice Model: https://docs.fish.audio/developer-guide/api-reference/model
+- Voice Design: https://docs.fish.audio/developer-guide/api-reference/voice-design
+- ASR: https://docs.fish.audio/developer-guide/api-reference/asr
 
-## 目录结构
+## Project Structure
 
-```
+```text
 src/
   app/
     api/fish/{tts,tts-with-timestamp,asr,voice-design,models,models/[id],models/create,models/upload-msgpack}/route.ts
     api/health/route.ts
     app/globals.css, layout.tsx, page.tsx
   components/
-    ui/                 # shadcn 风格原语
+    ui/                 # shadcn-style primitives
     site-header.tsx, voice-studio.tsx, tts-workbench.tsx,
     voice-picker.tsx, text-editor.tsx, tts-advanced-settings.tsx,
     audio-player.tsx, preset-picker.tsx, history-panel.tsx,
@@ -132,6 +141,6 @@ src/
     api-client.ts, timestamp.ts, batch.ts, form-defaults.ts
 ```
 
-## 关于 S2.1-Pro-Free
+## About S2.1-Pro-Free
 
-`s2.1-pro-free` 是 S2.1-Pro 同模型的免费开发层，公平使用，无硬性字符上限，但**无 TTFA/DPA/SLA 保证**。UI 不承诺生产 SLA。
+`s2.1-pro-free` is a free development tier of the same S2.1-Pro model. It is fair-use based and has no hard character limit, but it provides **no TTFA/DPA/SLA guarantees**. This UI does not promise production SLA.
