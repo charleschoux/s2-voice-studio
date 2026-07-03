@@ -1,5 +1,6 @@
 .venv/
 .env
+.env.local
 
 __pycache__/
 *.py[cod]
@@ -9,6 +10,10 @@ __pycache__/
 output/
 node_modules/
 web/dist/
+.next/
+*.tsbuildinfo
+next-env.d.ts
 
 Thumbs.db
 .DS_Store
+.playwright-cli
