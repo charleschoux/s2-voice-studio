@@ -8,15 +8,23 @@ import { VoiceDesignPanel } from "./voice-design-panel";
 import { AsrPanel } from "./asr-panel";
 import { useLocalState } from "@/lib/use-local-state";
 
+const NAV = [
+  { value: "workbench", label: "TTS 工作台" },
+  { value: "voices", label: "声音管理" },
+  { value: "voice-design", label: "Voice Design" },
+  { value: "asr", label: "ASR" },
+] as const;
+
 export function VoiceStudio() {
   const [tab, setTab] = useLocalState<string>("vs-tab", "workbench");
   return (
     <Tabs value={tab} onValueChange={setTab} className="w-full">
       <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-4">
-        <TabsTrigger value="workbench" className="text-xs sm:text-sm">TTS 工作台</TabsTrigger>
-        <TabsTrigger value="voices" className="text-xs sm:text-sm">声音管理</TabsTrigger>
-        <TabsTrigger value="voice-design" className="text-xs sm:text-sm">Voice Design</TabsTrigger>
-        <TabsTrigger value="asr" className="text-xs sm:text-sm">ASR</TabsTrigger>
+        {NAV.map((n) => (
+          <TabsTrigger key={n.value} value={n.value} className="text-xs sm:text-sm">
+            {n.label}
+          </TabsTrigger>
+        ))}
       </TabsList>
       <TabsContent value="workbench" className="mt-4">
         <TtsWorkbench />

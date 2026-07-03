@@ -55,7 +55,7 @@ export function HistoryPanel({ onRestore }: Props) {
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between p-3">
         <div className="flex items-center gap-2 text-sm font-semibold">
-          <History className="h-4 w-4" /> 历史
+          <History className="h-4 w-4 text-primary" /> 历史
           <Badge variant="secondary">{store.history.length}</Badge>
         </div>
         {store.history.length > 0 && (
@@ -93,7 +93,7 @@ export function HistoryPanel({ onRestore }: Props) {
             store.history.map((h) => (
               <div
                 key={h.id}
-                className="mb-1.5 rounded-md border p-2 text-sm hover:bg-accent/40"
+                className="mb-1.5 rounded-lg border border-border bg-card p-2.5 text-sm hover:bg-accent/40"
               >
                 <div className="flex items-center gap-1.5">
                   <Badge
@@ -152,7 +152,7 @@ export function HistoryPanel({ onRestore }: Props) {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-6 text-[11px]"
+                    className="h-6 text-[11px] text-muted-foreground hover:text-destructive"
                     onClick={() => store.removeHistory(h.id)}
                   >
                     <Trash2 className="h-3 w-3" />

@@ -65,7 +65,7 @@ export function PresetPicker({ form, onApply }: Props) {
         value=""
       >
         <SelectTrigger className="h-8 w-[200px] text-xs">
-          <Bookmark className="mr-1 h-3.5 w-3.5" />
+          <Bookmark className="mr-1 h-3.5 w-3.5 text-primary" />
           <SelectValue placeholder="应用预设" />
         </SelectTrigger>
         <SelectContent>
@@ -114,11 +114,11 @@ export function PresetPicker({ form, onApply }: Props) {
               <DialogTitle>管理预设</DialogTitle>
               <DialogDescription>内置预设不可删除。</DialogDescription>
             </DialogHeader>
-            <div className="max-h-72 space-y-1 overflow-auto">
+            <div className="max-h-72 space-y-1 overflow-auto scrollbar-thin">
               {store.presets.map((p) => (
                 <div
                   key={p.id}
-                  className="flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm"
+                  className="flex items-center gap-2 rounded-lg border border-border bg-card px-2 py-1.5 text-sm"
                 >
                   <div className="flex-1">
                     <div className="font-medium">{p.name}</div>
@@ -129,8 +129,7 @@ export function PresetPicker({ form, onApply }: Props) {
                   {!p.builtin && (
                     <Button
                       variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
+                      size="icon-sm"
                       onClick={() => store.removePreset(p.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />

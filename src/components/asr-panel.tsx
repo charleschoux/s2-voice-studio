@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Upload, FileAudio, Copy } from "lucide-react";
+import { Loader2, Upload, FileAudio, Copy, Mic } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Panel, PanelHeader } from "./studio-primitives";
 import { asr } from "@/lib/api-client";
 import { blobToBase64Client } from "@/lib/client-media";
 import { copyToClipboard } from "@/lib/utils";
@@ -61,70 +62,96 @@ export function AsrPanel() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <div className="space-y-3 rounded-md border p-4">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold">ASR (语音识别)</h3>
-          <Badge variant="warning" className="text-[10px]">独立计费</Badge>
+      <Panel className="overflow-hidden">
+        <PanelHeader
+          title="ASR · 语音识别"
+          zh="转写参考音频"
+          icon={<Mic className="h-3.5 w-3.5" />}
+          right={<Badge variant="warning">独立计费</Badge>}
+        />
+        <div className="space-y-3 p-4">
+          <Alert variant="warning" className="py-2.5">
+            <AlertDescription>
+              <code className="readout">/v1/asr</code> 是独立计费接口，用于把参考音频转成文字，供声音克隆 transcript 使用。
+            </AlertDescription>
+          </Alert>
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground hover:bg-accent">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
+              <Upload className="h-5 w-5" />
+            </span>
+            <span>点击选择音频文件</span>
+            <input
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              onChange={(e) => setFile((e.target.files || [])[0] || null)}
+            />
+          </label>
+          {file && (
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <FileAudio className="h-3.5 w-3.5 text-primary" />
+              <span className="truncate">{file.name}</span>
+              <span className="readout">· {(file.size / 1024).toFixed(1)} KB</span>
+            </p>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-2">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">language</Label>
+              <Input value={language} onChange={(e) => setLanguage(e.target.value)} placeholder="zh/en/… 留空自动" />
+            </div>
+          </div>
+          <ToggleRow label="use_itn (逆文本归一化)" checked={useItn} onChange={setUseItn} />
+          <ToggleRow label="ignore_start_end" checked={ignoreStartEnd} onChange={setIgnoreStartEnd} />
+          <Button onClick={run} disabled={busy} size="lg">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileAudio className="h-4 w-4" />}
+            识别
+          </Button>
+          {err && <p className="text-xs text-destructive">{err}</p>}
         </div>
-        <Alert variant="warning">
-          <AlertTitle>注意</AlertTitle>
-          <AlertDescription>
-            /v1/asr 是独立计费接口，用于把参考音频转成文字，供声音克隆 transcript 使用。
-          </AlertDescription>
-        </Alert>
-        <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-          <Upload className="mx-auto mb-2 h-6 w-6" />
-          <input
-            type="file"
-            accept="audio/*"
-            onChange={(e) => setFile((e.target.files || [])[0] || null)}
+      </Panel>
+
+      <Panel className="overflow-hidden">
+        <PanelHeader
+          title="Transcript"
+          zh="识别结果"
+          right={
+            transcript && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => copyToClipboard(transcript).then(() => toast.success("已复制"))}
+              >
+                <Copy className="h-3.5 w-3.5" /> 复制
+              </Button>
+            )
+          }
+        />
+        <div className="p-4">
+          <Textarea
+            value={transcript}
+            onChange={(e) => setTranscript(e.target.value)}
+            placeholder="识别结果，可编辑后用于声音克隆 transcript"
+            className="min-h-[280px]"
           />
         </div>
-        {file && (
-          <p className="flex items-center gap-1 text-xs text-muted-foreground">
-            <FileAudio className="h-3.5 w-3.5" /> {file.name} · {(file.size / 1024).toFixed(1)} KB
-          </p>
-        )}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="grid gap-2">
-            <Label>language</Label>
-            <Input value={language} onChange={(e) => setLanguage(e.target.value)} placeholder="zh/en/… 留空自动" />
-          </div>
-        </div>
-        <div className="flex items-center justify-between rounded-md border px-3 py-2">
-          <Label>use_itn (逆文本归一化)</Label>
-          <Switch checked={useItn} onCheckedChange={setUseItn} />
-        </div>
-        <div className="flex items-center justify-between rounded-md border px-3 py-2">
-          <Label>ignore_start_end</Label>
-          <Switch checked={ignoreStartEnd} onCheckedChange={setIgnoreStartEnd} />
-        </div>
-        <Button onClick={run} disabled={busy}>
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileAudio className="h-4 w-4" />}
-          识别
-        </Button>
-        {err && <p className="text-xs text-destructive">{err}</p>}
-      </div>
-      <div className="space-y-3 rounded-md border p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Transcript</h3>
-          {transcript && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => copyToClipboard(transcript).then(() => toast.success("已复制"))}
-            >
-              <Copy className="h-3.5 w-3.5" /> 复制
-            </Button>
-          )}
-        </div>
-        <Textarea
-          value={transcript}
-          onChange={(e) => setTranscript(e.target.value)}
-          placeholder="识别结果，可编辑后用于声音克隆 transcript"
-          className="min-h-[200px]"
-        />
-      </div>
+      </Panel>
+    </div>
+  );
+}
+
+function ToggleRow({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (c: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-card/40 px-3 py-2">
+      <Label className="text-xs font-medium">{label}</Label>
+      <Switch checked={checked} onCheckedChange={onChange} />
     </div>
   );
 }

@@ -4,16 +4,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border px-4 py-3 text-sm [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7",
+  "relative w-full rounded-2xl border p-4 text-sm [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:h-4 [&>svg]:w-4 [&>svg~*]:pl-7",
   {
     variants: {
       variant: {
-        default: "bg-background text-foreground",
+        default: "border-border bg-card text-foreground [&>svg]:text-muted-foreground shadow-xs",
         destructive:
-          "border-destructive/50 text-destructive [&>svg]:text-destructive bg-destructive/5",
+          "border-destructive/30 bg-destructive/8 text-destructive [&>svg]:text-destructive",
         warning:
-          "border-amber-500/50 text-amber-700 dark:text-amber-400 [&>svg]:text-amber-600 bg-amber-500/5",
-        info: "border-primary/50 text-primary [&>svg]:text-primary bg-primary/5",
+          "border-warning/40 bg-warning/10 text-warning-foreground [&>svg]:text-warning-foreground",
+        info: "border-primary/30 bg-primary/8 text-primary [&>svg]:text-primary",
       },
     },
     defaultVariants: {
@@ -43,7 +43,7 @@ const AlertTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h5
     ref={ref}
-    className={cn("mb-1 font-medium leading-none tracking-tight", className)}
+    className={cn("mb-1 font-semibold leading-none tracking-tight", className)}
     {...props}
   />
 ));
@@ -55,7 +55,7 @@ const AlertDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm [&_p]:leading-relaxed", className)}
+    className={cn("text-sm leading-relaxed text-muted-foreground [&_p]:leading-relaxed [&_code]:rounded-md [&_code]:border [&_code]:border-border [&_code]:bg-secondary [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[11px] [&_code]:text-foreground", className)}
     {...props}
   />
 ));

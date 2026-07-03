@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AudioLines, Github, RefreshCw, Settings2, Sparkles } from "lucide-react";
+import { AudioLines, RefreshCw, Settings2, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -13,19 +13,24 @@ import { FISH_DOCS_LINKS } from "@/lib/constants";
 export function SiteHeader() {
   const health = useHealth();
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="flex h-14 items-center gap-2 px-3 sm:px-6">
-        <div className="flex items-center gap-2 font-semibold">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-background">
+      <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-3 px-3 sm:px-6">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <AudioLines className="h-4 w-4" />
           </span>
-          <span className="hidden sm:inline">S2 Voice Studio</span>
+          <div className="hidden flex-col leading-tight sm:flex">
+            <span className="text-sm font-semibold tracking-tight">S2 Voice Studio</span>
+            <span className="text-[10px] text-muted-foreground">Fish Audio Console</span>
+          </div>
         </div>
-        <Badge variant="outline" className="ml-1 hidden md:inline-flex">
+
+        <Badge variant="soft" className="ml-1 hidden md:inline-flex">
           Fish Audio · s2.1-pro-free
         </Badge>
+
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-2 rounded-md border px-2 py-1">
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-1.5 shadow-xs">
             <Label htmlFor="mock-switch" className="text-xs text-muted-foreground">
               Mock
             </Label>
@@ -38,7 +43,7 @@ export function SiteHeader() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="outline"
+                variant="soft"
                 size="sm"
                 onClick={health.refresh}
                 aria-label="Refresh API status"
@@ -63,11 +68,6 @@ export function SiteHeader() {
           <Button asChild variant="ghost" size="icon">
             <a href={FISH_DOCS_LINKS.modelsOverview} target="_blank" rel="noreferrer" aria-label="Fish docs">
               <Sparkles className="h-4 w-4" />
-            </a>
-          </Button>
-          <Button asChild variant="ghost" size="icon">
-            <a href={FISH_DOCS_LINKS.capabilities} target="_blank" rel="noreferrer" aria-label="Capabilities">
-              <Github className="h-4 w-4" />
             </a>
           </Button>
         </div>

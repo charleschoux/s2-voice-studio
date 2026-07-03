@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Play, Sparkles, Wand2, Clock, Layers } from "lucide-react";
+import { Loader2, Play, Sparkles, Wand2, Clock, Layers, Settings2, Waypoints } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +41,6 @@ export function TtsWorkbench() {
 
   const mockMode = health.mock || !health.hasApiKey;
 
-  // Restore from history.
   const restore = React.useCallback(
     (item: HistoryItem) => {
       setForm({
@@ -175,7 +174,7 @@ export function TtsWorkbench() {
           </Alert>
         )}
 
-        <div className="rounded-xl border bg-card p-4">
+        <section className="clay p-4 sm:p-5">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-semibold">TTS 工作台</h2>
             <PresetPicker form={form} onApply={onApplyPreset} />
@@ -194,7 +193,7 @@ export function TtsWorkbench() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="normal" className="mt-3 space-y-4">
+            <TabsContent value="normal" className="mt-4 space-y-4">
               <VoiceSection form={form} setForm={setForm} />
               <TextEditor
                 value={form.text}
@@ -221,7 +220,7 @@ export function TtsWorkbench() {
               />
             </TabsContent>
 
-            <TabsContent value="stream" className="mt-3 space-y-4">
+            <TabsContent value="stream" className="mt-4 space-y-4">
               <VoiceSection form={form} setForm={setForm} />
               <TextEditor
                 value={form.text}
@@ -253,30 +252,41 @@ export function TtsWorkbench() {
               />
             </TabsContent>
 
-            <TabsContent value="timestamp" className="mt-3 space-y-4">
+            <TabsContent value="timestamp" className="mt-4 space-y-4">
               <TimestampPanel form={form} setForm={setForm} mock={mockMode} />
             </TabsContent>
           </Tabs>
-        </div>
+        </section>
 
-        <div className="rounded-xl border bg-card p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-semibold">长文本批量</h2>
+        <section className="clay p-4 sm:p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <Waypoints className="h-4 w-4 text-muted-foreground" />
+              长文本批量
+            </h2>
             <Badge variant="outline" className="text-[10px]">
               并发 1–5 · 429 退避
             </Badge>
           </div>
           <BatchPanel form={form} setForm={setForm} mock={mockMode} />
-        </div>
+        </section>
 
-        <div className="rounded-xl border bg-card p-4">
-          <h2 className="mb-3 text-sm font-semibold">高级设置</h2>
+        <section className="clay p-4 sm:p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <Settings2 className="h-4 w-4 text-muted-foreground" />
+              高级设置
+            </h2>
+            <Badge variant="soft" className="text-[10px]">
+              {form.model}
+            </Badge>
+          </div>
           <TtsAdvancedSettings form={form} setForm={setForm} />
-        </div>
+        </section>
       </div>
 
       <aside className="lg:sticky lg:top-[72px] lg:h-[calc(100vh-96px)]">
-        <div className="h-full rounded-xl border bg-card">
+        <div className="clay h-full overflow-hidden">
           <HistoryPanel onRestore={restore} />
         </div>
       </aside>
@@ -349,9 +359,7 @@ function ErrorAlert({ message }: { message: string }) {
   );
 }
 
-// Build a tiny silent placeholder audio for mock mode.
 async function makeMockBlob(form: TtsForm): Promise<Blob> {
-  // A minimal valid MP3 frame of silence (~0.026s) repeated to approximate length.
   const framesNeeded = Math.max(4, Math.min(200, Math.ceil(form.text.length / 4)));
   const frame = new Uint8Array([
     0xff, 0xfb, 0x90, 0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -361,7 +369,6 @@ async function makeMockBlob(form: TtsForm): Promise<Blob> {
   ]);
   const buf = new Uint8Array(frame.length * framesNeeded);
   for (let i = 0; i < framesNeeded; i++) buf.set(frame, i * frame.length);
-  // For non-mp3 formats we still return an mp3-ish blob so the player can play.
   void form;
   return new Blob([buf], { type: mimeForFormat("mp3") });
 }

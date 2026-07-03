@@ -31,7 +31,7 @@ export function VoicePicker({ value, onChange }: VoicePickerProps) {
   return (
     <div className="space-y-2">
       <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)}>
-        <TabsList className="grid w-full grid-cols-5 h-auto">
+        <TabsList className="grid h-auto w-full grid-cols-5">
           <TabsTrigger value="default" className="text-xs">默认</TabsTrigger>
           <TabsTrigger value="manual" className="text-xs">手动</TabsTrigger>
           <TabsTrigger value="library" className="text-xs">模型库</TabsTrigger>
@@ -39,9 +39,9 @@ export function VoicePicker({ value, onChange }: VoicePickerProps) {
           <TabsTrigger value="favorites" className="text-xs">收藏</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="default" className="mt-2">
-          <ScrollArea className="h-56 rounded-md border">
-            <div className="grid grid-cols-1 gap-1 p-2 sm:grid-cols-2">
+        <TabsContent value="default" className="mt-2.5">
+          <ScrollArea className="h-56 rounded-xl border border-border bg-card">
+            <div className="grid grid-cols-1 gap-1.5 p-2 sm:grid-cols-2">
               {DEFAULT_VOICES.map((v) => (
                 <VoiceRow
                   key={v.id}
@@ -56,7 +56,7 @@ export function VoicePicker({ value, onChange }: VoicePickerProps) {
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="manual" className="mt-2">
+        <TabsContent value="manual" className="mt-2.5">
           <div className="flex gap-2">
             <Input
               placeholder="输入 reference_id (model id)"
@@ -79,16 +79,16 @@ export function VoicePicker({ value, onChange }: VoicePickerProps) {
           </p>
         </TabsContent>
 
-        <TabsContent value="library" className="mt-2">
+        <TabsContent value="library" className="mt-2.5">
           <ModelBrowser self={false} value={value} onChange={onChange} />
         </TabsContent>
 
-        <TabsContent value="mine" className="mt-2">
+        <TabsContent value="mine" className="mt-2.5">
           <ModelBrowser self value={value} onChange={onChange} />
         </TabsContent>
 
-        <TabsContent value="favorites" className="mt-2">
-          <ScrollArea className="h-56 rounded-md border">
+        <TabsContent value="favorites" className="mt-2.5">
+          <ScrollArea className="h-56 rounded-xl border border-border bg-card">
             <div className="p-2">
               {store.favorites.length === 0 ? (
                 <p className="px-2 py-8 text-center text-sm text-muted-foreground">
@@ -113,14 +113,14 @@ export function VoicePicker({ value, onChange }: VoicePickerProps) {
       </Tabs>
 
       {value && (
-        <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-2 py-1.5">
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-secondary px-2.5 py-1.5">
           <AudioLines className="h-3.5 w-3.5 text-primary" />
           <span className="truncate text-xs text-muted-foreground">当前 voice:</span>
           <code className="truncate text-xs font-mono">{value}</code>
           <Button
             variant="ghost"
-            size="icon"
-            className="ml-auto h-6 w-6"
+            size="icon-sm"
+            className="ml-auto"
             onClick={() => copyToClipboard(value).then(() => toast.success("已复制"))}
           >
             <Copy className="h-3 w-3" />
@@ -152,8 +152,8 @@ function VoiceRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm transition-colors",
-        selected ? "border-primary bg-primary/10" : "hover:bg-accent",
+        "flex items-center gap-2 rounded-lg border px-2 py-1.5 text-sm transition-colors",
+        selected ? "border-primary bg-primary/10" : "border-border hover:bg-accent",
       )}
     >
       <button
@@ -180,7 +180,7 @@ function VoiceRow({
         }}
         aria-label="复制 id"
       >
-        {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+        {copied ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
       </button>
       {favorite ? (
         <button
@@ -189,7 +189,7 @@ function VoiceRow({
           onClick={onUnfavorite}
           aria-label="取消收藏"
         >
-          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+          <Star className="h-3 w-3 fill-warning text-warning" />
         </button>
       ) : null}
     </div>
@@ -238,7 +238,7 @@ function ModelBrowser({
     <div className="space-y-2">
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="按 title 搜索"
             value={q}
@@ -251,11 +251,11 @@ function ModelBrowser({
         </Button>
       </div>
       {err && (
-        <p className="rounded-md border border-destructive/50 bg-destructive/5 px-2 py-1.5 text-xs text-destructive">
+        <p className="rounded-lg border border-destructive/30 bg-destructive/8 px-2 py-1.5 text-xs text-destructive">
           {err}
         </p>
       )}
-      <ScrollArea className="h-56 rounded-md border">
+      <ScrollArea className="h-56 rounded-xl border border-border bg-card">
         <div className="p-2">
           {loading ? (
             <div className="space-y-2 p-1">
@@ -305,8 +305,8 @@ function ModelCardMini({
   return (
     <div
       className={cn(
-        "mb-1 flex items-center gap-2 rounded-md border px-2 py-1.5",
-        selected ? "border-primary bg-primary/10" : "hover:bg-accent",
+        "mb-1.5 flex items-center gap-2 rounded-lg border px-2 py-1.5 transition-colors",
+        selected ? "border-primary bg-primary/10" : "border-transparent hover:bg-accent",
       )}
     >
       <button
@@ -315,6 +315,7 @@ function ModelCardMini({
         onClick={() => onSelect(model._id)}
       >
         <span className="flex w-full items-center gap-1.5 truncate text-sm">
+          <AudioLines className="h-3 w-3 shrink-0 text-primary/70" />
           <span className="truncate">{model.title}</span>
           {model.visibility && (
             <Badge variant="outline" className="text-[10px]">
@@ -337,7 +338,7 @@ function ModelCardMini({
         <Star
           className={cn(
             "h-3.5 w-3.5",
-            isFavorite && "fill-amber-400 text-amber-400",
+            isFavorite && "fill-warning text-warning",
           )}
         />
       </button>

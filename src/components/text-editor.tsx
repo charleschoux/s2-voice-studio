@@ -1,14 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Bold,
-  Brackets,
-  Languages,
-  Mic2,
-  Plus,
-  Users,
-} from "lucide-react";
+import { Bold, Brackets, Languages, Mic2, Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +47,7 @@ export function TextEditor({ value, onChange, textareaRef }: TextEditorProps) {
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       <div className="flex flex-wrap items-center gap-1.5">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

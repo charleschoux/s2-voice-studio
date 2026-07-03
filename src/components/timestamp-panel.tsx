@@ -11,7 +11,7 @@ import { VoicePicker } from "./voice-picker";
 import { TextEditor } from "./text-editor";
 import { useAppStore } from "@/lib/use-app-store";
 import type { TtsForm } from "@/lib/schemas";
-import type { TimestampResult, Alignment } from "@/lib/types";
+import type { TimestampResult } from "@/lib/types";
 import {
   parseTimestampStream,
   alignmentToSrt,
@@ -35,6 +35,7 @@ export function TimestampPanel({ form, setForm, mock }: Props) {
   const [audioUrl, setAudioUrl] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [playing, setPlaying] = React.useState(false);
+  const [activeIdx, setActiveIdx] = React.useState<number | null>(null);
   const audioRef = React.useRef<HTMLAudioElement>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -159,6 +160,36 @@ export function TimestampPanel({ form, setForm, mock }: Props) {
     }
   };
 
+  React.useEffect(() => {
+    const a = audioRef.current;
+    if (!a || !result) return;
+    const onTime = () => {
+      const t = a.currentTime;
+      const chars = result.alignment?.chars ?? [];
+      let idx = -1;
+      for (let i = 0; i < chars.length; i++) {
+        const c = chars[i];
+        const s = c?.start;
+        const e = c?.end;
+        if (s != null && e != null && t >= s && t < e) {
+          idx = i;
+          break;
+        }
+      }
+      setActiveIdx(idx);
+    };
+    a.addEventListener("timeupdate", onTime);
+    return () => a.removeEventListener("timeupdate", onTime);
+  }, [result, audioUrl]);
+
+  const seekTo = (start: number) => {
+    const a = audioRef.current;
+    if (!a) return;
+    a.currentTime = start;
+    a.play().catch(() => {});
+    setPlaying(true);
+  };
+
   const downloadAudio = () => {
     if (!result?.mergedAudio) return;
     downloadBlob(
@@ -223,7 +254,7 @@ export function TimestampPanel({ form, setForm, mock }: Props) {
         </Alert>
       )}
       {result && (
-        <div className="space-y-3 rounded-md border bg-card p-3">
+        <div className="space-y-3 rounded-xl border border-border bg-card p-3 shadow-xs">
           <audio ref={audioRef} src={audioUrl || undefined} onEnded={() => setPlaying(false)} className="hidden" />
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" onClick={togglePlay} disabled={!audioUrl}>
@@ -242,22 +273,18 @@ export function TimestampPanel({ form, setForm, mock }: Props) {
               <Button size="sm" variant="outline" onClick={downloadJson}>
                 <FileJson className="h-3.5 w-3.5" /> JSON
               </Button>
-              <Button size="sm" variant="outline" onClick={downloadSrt}>
-                SRT
-              </Button>
-              <Button size="sm" variant="outline" onClick={downloadVtt}>
-                VTT
-              </Button>
+              <Button size="sm" variant="ghost" onClick={downloadSrt}>SRT</Button>
+              <Button size="sm" variant="ghost" onClick={downloadVtt}>VTT</Button>
             </div>
           </div>
 
-          <div className="rounded-md border">
-            <div className="border-b bg-muted/40 px-3 py-1.5 text-xs font-semibold">
+          <div className="overflow-hidden rounded-xl border border-border">
+            <div className="border-b border-border bg-secondary/50 px-3 py-1.5 text-xs font-semibold">
               时间轴 ({timeline.length} chars)
             </div>
             <ScrollArea className="h-56">
               <table className="w-full text-xs">
-                <thead className="sticky top-0 bg-background">
+                <thead className="sticky top-0 z-10 bg-card">
                   <tr className="text-left text-muted-foreground">
                     <th className="px-3 py-1.5 font-medium">#</th>
                     <th className="px-3 py-1.5 font-medium">char</th>
@@ -274,8 +301,16 @@ export function TimestampPanel({ form, setForm, mock }: Props) {
                       </td>
                     </tr>
                   ) : (
-                    timeline.map((r) => (
-                      <tr key={r.index} className="border-t">
+                    timeline.map((r, i) => (
+                      <tr
+                        key={r.index}
+                        onClick={() => seekTo(r.start)}
+                        className={`cursor-pointer border-t border-border/60 transition-colors ${
+                          activeIdx === i
+                            ? "bg-primary/15 text-primary"
+                            : "hover:bg-accent/50"
+                        }`}
+                      >
                         <td className="px-3 py-1 text-muted-foreground">{r.index}</td>
                         <td className="px-3 py-1 font-mono">
                           {r.char === " " ? "␣" : r.char}
@@ -292,6 +327,9 @@ export function TimestampPanel({ form, setForm, mock }: Props) {
               </table>
             </ScrollArea>
           </div>
+          <p className="text-[10px] text-muted-foreground">
+            点击任意行可跳转到该时间点播放。
+          </p>
         </div>
       )}
     </div>

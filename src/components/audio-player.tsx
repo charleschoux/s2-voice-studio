@@ -66,7 +66,7 @@ export function AudioPlayer({
 
   if (!audioUrl) {
     return (
-      <div className="flex h-32 flex-col items-center justify-center gap-2 rounded-md border border-dashed text-sm text-muted-foreground">
+      <div className="flex h-32 flex-col items-center justify-center gap-2 rounded-xl border border-border text-sm text-muted-foreground">
         {busy ? (
           <>
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -118,7 +118,7 @@ export function AudioPlayer({
   };
 
   return (
-    <div className="space-y-3 rounded-md border bg-card p-3">
+    <div className="space-y-3 rounded-xl border border-border bg-card p-3 shadow-xs">
       <audio ref={audioRef} src={audioUrl} preload="metadata" className="hidden" />
       <div className="flex items-center gap-2">
         <Button size="icon" onClick={toggle} aria-label={playing ? "暂停" : "播放"}>
@@ -153,10 +153,10 @@ export function AudioPlayer({
               <RefreshCw className="h-3.5 w-3.5" /> 重生成
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={copyReqJson}>
+          <Button size="sm" variant="ghost" onClick={copyReqJson}>
             <Copy className="h-3.5 w-3.5" /> 请求 JSON
           </Button>
-          <Button size="sm" variant="outline" onClick={copyCurl}>
+          <Button size="sm" variant="ghost" onClick={copyCurl}>
             <Terminal className="h-3.5 w-3.5" /> cURL
           </Button>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Play, Sparkles, Download } from "lucide-react";
+import { Loader2, Play, Sparkles, Download, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Panel, PanelHeader, SectionLabel } from "./studio-primitives";
 import { voiceDesign } from "@/lib/api-client";
 import { base64ToUint8Array, mimeForFormat, extForFormat } from "@/lib/client-media";
 import { downloadBlob, slugify } from "@/lib/utils";
@@ -103,90 +104,104 @@ export function VoiceDesignPanel() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <div className="space-y-3 rounded-md border p-4">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold">Voice Design</h3>
-          <Badge variant="warning" className="text-[10px]">独立计费</Badge>
-        </div>
-        <Alert variant="warning">
-          <AlertTitle>注意</AlertTitle>
-          <AlertDescription>
-            /v1/voice-design 是独立计费接口（header <code>model: voice-design-1</code>），<b>不是</b>免费 TTS。请确认你的账户有权限。
-          </AlertDescription>
-        </Alert>
-        <div className="grid gap-2">
-          <Label>instruction * (1–2000)</Label>
-          <Textarea
-            value={instruction}
-            onChange={(e) => setInstruction(e.target.value.slice(0, 2000))}
-            placeholder="e.g. A warm, confident female narrator with a slight British accent."
-            className="min-h-[100px]"
-          />
-          <span className="text-[11px] text-muted-foreground">{instruction.length}/2000</span>
-        </div>
-        <div className="grid gap-2">
-          <Label>reference_text (≤150)</Label>
-          <Input
-            value={referenceText}
-            onChange={(e) => setReferenceText(e.target.value.slice(0, 150))}
-            placeholder="可选参考文本"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
+      <Panel className="overflow-hidden">
+        <PanelHeader
+          title="Voice Design"
+          zh="提示词声音设计"
+          icon={<Wand2 className="h-3.5 w-3.5" />}
+          right={<Badge variant="warning">独立计费</Badge>}
+        />
+        <div className="space-y-3 p-4">
+          <Alert variant="warning" className="py-2.5">
+            <AlertDescription>
+              <code className="readout">/v1/voice-design</code> 是独立计费接口（header{" "}
+              <code className="readout">model: voice-design-1</code>），<b>不是</b>免费 TTS。请确认你的账户有权限。
+            </AlertDescription>
+          </Alert>
           <div className="grid gap-2">
-            <Label>language</Label>
-            <Input value={language} onChange={(e) => setLanguage(e.target.value)} placeholder="en/zh/…" />
+            <Label className="flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground">
+              <span>instruction *</span>
+              <span className="readout normal-case text-primary">{instruction.length}/2000</span>
+            </Label>
+            <Textarea
+              value={instruction}
+              onChange={(e) => setInstruction(e.target.value.slice(0, 2000))}
+              placeholder="e.g. A warm, confident female narrator with a slight British accent."
+              className="min-h-[110px]"
+            />
           </div>
           <div className="grid gap-2">
-            <Label>n ({n})</Label>
-            <Slider value={[n]} min={1} max={4} step={1} onValueChange={(v) => setN(v[0])} />
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">reference_text (≤150)</Label>
+            <Input
+              value={referenceText}
+              onChange={(e) => setReferenceText(e.target.value.slice(0, 150))}
+              placeholder="可选参考文本"
+            />
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-2">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">language</Label>
+              <Input value={language} onChange={(e) => setLanguage(e.target.value)} placeholder="en/zh/…" />
+            </div>
+            <div className="grid gap-2">
+              <Label className="flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground">
+                <span>n</span>
+                <span className="readout normal-case text-primary">{n}</span>
+              </Label>
+              <Slider value={[n]} min={1} max={4} step={1} onValueChange={(v) => setN(v[0])} />
+            </div>
+          </div>
+          <SliderRow label="speed" value={speed} min={0} max={3} step={0.05} onChange={setSpeed} display={(v) => v.toFixed(2)} />
+          <SliderRow label="num_step" value={numStep} min={1} max={128} step={1} onChange={setNumStep} display={(v) => `${v}`} />
+          <SliderRow label="guidance_scale" value={guidance} min={0} max={20} step={0.1} onChange={setGuidance} display={(v) => v.toFixed(1)} />
+          <SliderRow label="instruct_guidance_scale" value={instructGuidance} min={0} max={10} step={0.1} onChange={setInstructGuidance} display={(v) => v.toFixed(1)} />
+          <div className="grid gap-2">
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">seed (可选)</Label>
+            <Input value={seed} onChange={(e) => setSeed(e.target.value.replace(/[^0-9]/g, ""))} placeholder="留空随机" />
+          </div>
+          <Button onClick={run} disabled={busy} size="lg">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            生成候选
+          </Button>
+          {err && <p className="text-xs text-destructive">{err}</p>}
         </div>
-        <SliderRow label="speed" value={speed} min={0} max={3} step={0.05} onChange={setSpeed} display={(v) => v.toFixed(2)} />
-        <SliderRow label="num_step" value={numStep} min={1} max={128} step={1} onChange={setNumStep} display={(v) => `${v}`} />
-        <SliderRow label="guidance_scale" value={guidance} min={0} max={20} step={0.1} onChange={setGuidance} display={(v) => v.toFixed(1)} />
-        <SliderRow label="instruct_guidance_scale" value={instructGuidance} min={0} max={10} step={0.1} onChange={setInstructGuidance} display={(v) => v.toFixed(1)} />
-        <div className="grid gap-2">
-          <Label>seed (可选)</Label>
-          <Input value={seed} onChange={(e) => setSeed(e.target.value.replace(/[^0-9]/g, ""))} placeholder="留空随机" />
-        </div>
-        <Button onClick={run} disabled={busy}>
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          生成候选
-        </Button>
-        {err && <p className="text-xs text-destructive">{err}</p>}
-      </div>
+      </Panel>
 
-      <div className="space-y-3 rounded-md border p-4">
-        <h3 className="text-sm font-semibold">候选音频</h3>
-        {candidates.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">生成后候选音频显示在这里</p>
-        ) : (
-          <div className="space-y-3">
-            {candidates.map((c) => (
-              <div key={c.index} className="rounded-md border p-3">
-                <div className="mb-2 flex items-center gap-2">
-                  <Badge variant="secondary">候选 {c.index + 1}</Badge>
-                  {c.audioBase64 ? (
-                    <Button size="sm" variant="outline" onClick={() => download(c)}>
-                      <Download className="h-3.5 w-3.5" /> 下载
-                    </Button>
+      <Panel className="overflow-hidden">
+        <PanelHeader title="Candidates" zh="候选音频" icon={<Play className="h-3.5 w-3.5" />} />
+        <div className="space-y-3 p-4">
+          {candidates.length === 0 ? (
+            <div className="clay-inset flex h-48 flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Sparkles className="h-5 w-5 opacity-50" />
+              <span>生成后候选音频显示在这里</span>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {candidates.map((c) => (
+                <div key={c.index} className="rounded-md border border-border bg-card/50 p-3">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Badge variant="warning">候选 {c.index + 1}</Badge>
+                    {c.audioBase64 ? (
+                      <Button size="sm" variant="ghost" className="ml-auto" onClick={() => download(c)}>
+                        <Download className="h-3.5 w-3.5" /> 下载
+                      </Button>
+                    ) : (
+                      <span className="ml-auto text-[11px] text-muted-foreground">mock 占位</span>
+                    )}
+                  </div>
+                  {c.url ? (
+                    <audio src={c.url} controls className="w-full rounded-md" />
                   ) : (
-                    <span className="text-[11px] text-muted-foreground">mock 占位</span>
+                    <div className="flex h-10 items-center justify-center gap-2 text-xs text-muted-foreground">
+                      <Play className="h-3.5 w-3.5" /> mock 占位音频
+                    </div>
                   )}
                 </div>
-                {c.url ? (
-                  <audio src={c.url} controls className="w-full" />
-                ) : (
-                  <div className="flex h-10 items-center justify-center text-xs text-muted-foreground">
-                    <Play className="h-3.5 w-3.5" /> mock 占位音频
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Panel>
     </div>
   );
 }
@@ -211,8 +226,8 @@ function SliderRow({
   return (
     <div className="grid gap-1.5">
       <div className="flex items-center justify-between">
-        <Label className="text-xs">{label}</Label>
-        <span className="text-xs tabular-nums text-muted-foreground">{display(value)}</span>
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground">{label}</Label>
+        <span className="readout text-xs text-primary">{display(value)}</span>
       </div>
       <Slider value={[value]} min={min} max={max} step={step} onValueChange={(v) => onChange(v[0])} />
     </div>

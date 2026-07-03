@@ -2,50 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   S2 Voice Studio — Claymorphism theme (tweakcn)
+   Soft, warm, rounded surfaces with dual-layer clay shadows.
+   Light + dark variants. Simple is the best.
+   ============================================================ */
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --background: oklch(0.9232 0.0026 48.7171);
+    --foreground: oklch(0.2795 0.0368 260.031);
+    --card: oklch(0.9699 0.0013 106.4238);
+    --card-foreground: oklch(0.2795 0.0368 260.031);
+    --popover: oklch(0.9699 0.0013 106.4238);
+    --popover-foreground: oklch(0.2795 0.0368 260.031);
+    --primary: oklch(0.5854 0.2041 277.1173);
+    --primary-foreground: oklch(1 0 0);
+    --secondary: oklch(0.8687 0.0043 56.366);
+    --secondary-foreground: oklch(0.4461 0.0263 256.8018);
+    --muted: oklch(0.9232 0.0026 48.7171);
+    --muted-foreground: oklch(0.551 0.0234 264.3637);
+    --accent: oklch(0.9376 0.026 321.9388);
+    --accent-foreground: oklch(0.3729 0.0306 259.7328);
+    --destructive: oklch(0.6368 0.2078 25.3313);
+    --destructive-foreground: oklch(1 0 0);
+    --border: oklch(0.8687 0.0043 56.366);
+    --input: oklch(0.8687 0.0043 56.366);
+    --ring: oklch(0.5854 0.2041 277.1173);
+    --success: oklch(0.627 0.1702 149.2135);
+    --success-foreground: oklch(1 0 0);
+    --warning: oklch(0.7417 0.1844 70.0803);
+    --warning-foreground: oklch(0.25 0.04 60);
+
+    --radius: 1.25rem;
+
+    --tracking-normal: 0em;
+
+    --shadow-color: hsl(240 4% 60%);
+    --shadow-opacity: 0.18;
+    --shadow-blur: 10px;
+    --shadow-spread: 4px;
+    --shadow-offset-x: 2px;
+    --shadow-offset-y: 2px;
+    --shadow-2xs: 2px 2px 10px 4px hsl(240 4% 60% / 0.09);
+    --shadow-xs: 2px 2px 10px 4px hsl(240 4% 60% / 0.09);
+    --shadow-sm: 2px 2px 10px 4px hsl(240 4% 60% / 0.18),
+      2px 1px 2px 3px hsl(240 4% 60% / 0.18);
+    --shadow: 2px 2px 10px 4px hsl(240 4% 60% / 0.18),
+      2px 1px 2px 3px hsl(240 4% 60% / 0.18);
+    --shadow-md: 2px 2px 10px 4px hsl(240 4% 60% / 0.18),
+      2px 2px 4px 3px hsl(240 4% 60% / 0.18);
+    --shadow-lg: 2px 2px 10px 4px hsl(240 4% 60% / 0.18),
+      2px 4px 6px 3px hsl(240 4% 60% / 0.18);
+    --shadow-xl: 2px 2px 10px 4px hsl(240 4% 60% / 0.18),
+      2px 8px 10px 3px hsl(240 4% 60% / 0.18);
+    --shadow-2xl: 2px 2px 10px 4px hsl(240 4% 60% / 0.45);
+
+    /* inner highlight used by clay surfaces */
+    --clay-highlight: inset 0 1px 0 0 oklch(1 0 0 / 0.5);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 6.5%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 5%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --background: oklch(0.2244 0.0074 67.437);
+    --foreground: oklch(0.9288 0.0126 255.5078);
+    --card: oklch(0.2801 0.008 59.3379);
+    --card-foreground: oklch(0.9288 0.0126 255.5078);
+    --popover: oklch(0.2801 0.008 59.3379);
+    --popover-foreground: oklch(0.9288 0.0126 255.5078);
+    --primary: oklch(0.6801 0.1583 276.9349);
+    --primary-foreground: oklch(0.2244 0.0074 67.437);
+    --secondary: oklch(0.3359 0.0077 59.4197);
+    --secondary-foreground: oklch(0.8717 0.0093 258.3382);
+    --muted: oklch(0.2287 0.0074 67.4469);
+    --muted-foreground: oklch(0.7137 0.0192 261.3246);
+    --accent: oklch(0.3896 0.0074 59.4734);
+    --accent-foreground: oklch(0.8717 0.0093 258.3382);
+    --destructive: oklch(0.6368 0.2078 25.3313);
+    --destructive-foreground: oklch(0.2244 0.0074 67.437);
+    --border: oklch(0.3359 0.0077 59.4197);
+    --input: oklch(0.3359 0.0077 59.4197);
+    --ring: oklch(0.6801 0.1583 276.9349);
+    --success: oklch(0.627 0.1702 149.2135);
+    --success-foreground: oklch(0.2244 0.0074 67.437);
+    --warning: oklch(0.7417 0.1844 70.0803);
+    --warning-foreground: oklch(0.2244 0.0074 67.437);
+
+    --shadow-color: hsl(0 0% 0%);
+    --shadow-2xs: 2px 2px 10px 4px hsl(0 0% 0% / 0.09);
+    --shadow-xs: 2px 2px 10px 4px hsl(0 0% 0% / 0.09);
+    --shadow-sm: 2px 2px 10px 4px hsl(0 0% 0% / 0.18),
+      2px 1px 2px 3px hsl(0 0% 0% / 0.18);
+    --shadow: 2px 2px 10px 4px hsl(0 0% 0% / 0.18),
+      2px 1px 2px 3px hsl(0 0% 0% / 0.18);
+    --shadow-md: 2px 2px 10px 4px hsl(0 0% 0% / 0.18),
+      2px 2px 4px 3px hsl(0 0% 0% / 0.18);
+    --shadow-lg: 2px 2px 10px 4px hsl(0 0% 0% / 0.18),
+      2px 4px 6px 3px hsl(0 0% 0% / 0.18);
+    --shadow-xl: 2px 2px 10px 4px hsl(0 0% 0% / 0.18),
+      2px 8px 10px 3px hsl(0 0% 0% / 0.18);
+    --shadow-2xl: 2px 2px 10px 4px hsl(0 0% 0% / 0.45);
+
+    --clay-highlight: inset 0 1px 0 0 oklch(1 0 0 / 0.08);
   }
 }
 
@@ -53,25 +110,58 @@
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
   html {
     scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    letter-spacing: var(--tracking-normal);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 28%, transparent);
+    color: var(--foreground);
+  }
+}
+
+@layer components {
+  /* Clay card — the primary surface */
+  .clay {
+    background-color: var(--card);
+    border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md), var(--clay-highlight);
+  }
+  /* Inset / pressed clay (wells, player shells) */
+  .clay-inset {
+    background-color: var(--muted);
+    border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    border-radius: calc(var(--radius) - 4px);
+    box-shadow:
+      inset 2px 2px 5px 0 color-mix(in oklab, var(--shadow-color) 35%, transparent),
+      inset -1px -1px 2px 0 oklch(1 0 0 / 0.25);
   }
 }
 
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
   }
   .scrollbar-thin::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-border;
+    background: var(--border);
+    border-radius: 9999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -79,5 +169,11 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  .readout {
+    font-variant-numeric: tabular-nums;
+  }
+  .text-balance {
+    text-wrap: balance;
   }
 }

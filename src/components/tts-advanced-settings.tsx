@@ -50,7 +50,7 @@ export function TtsAdvancedSettings({ form, setForm }: Props) {
         <AccordionTrigger>
           <span className="flex items-center gap-2">
             模型与格式
-            <Badge variant="secondary" className="text-[10px]">{form.model}</Badge>
+            <Badge variant="soft" className="text-[10px]">{form.model}</Badge>
           </span>
         </AccordionTrigger>
         <AccordionContent className="space-y-4">
@@ -203,17 +203,13 @@ export function TtsAdvancedSettings({ form, setForm }: Props) {
             onChange={(v) => setProsody("volume", v)}
             display={(v) => `${v > 0 ? "+" : ""}${v} dB`}
           />
-          <div className="flex items-center justify-between rounded-md border px-3 py-2">
-            <div>
-              <Label htmlFor="nl">normalize_loudness</Label>
-              <p className="text-xs text-muted-foreground">默认 true</p>
-            </div>
-            <Switch
-              id="nl"
-              checked={form.prosody?.normalize_loudness ?? true}
-              onCheckedChange={(c) => setProsody("normalize_loudness", c)}
-            />
-          </div>
+          <ToggleRow
+            id="nl"
+            label="normalize_loudness"
+            hint="默认 true"
+            checked={form.prosody?.normalize_loudness ?? true}
+            onChange={(c) => setProsody("normalize_loudness", c)}
+          />
         </AccordionContent>
       </AccordionItem>
 
@@ -289,30 +285,20 @@ export function TtsAdvancedSettings({ form, setForm }: Props) {
             onChange={(v) => set("max_new_tokens", v)}
             display={(v) => `${v}`}
           />
-          <div className="flex items-center justify-between rounded-md border px-3 py-2">
-            <div>
-              <Label htmlFor="cop">condition_on_previous_chunks</Label>
-              <p className="text-xs text-muted-foreground">默认 true</p>
-            </div>
-            <Switch
-              id="cop"
-              checked={form.condition_on_previous_chunks ?? true}
-              onCheckedChange={(c) => set("condition_on_previous_chunks", c)}
-            />
-          </div>
-          <div className="flex items-center justify-between rounded-md border px-3 py-2">
-            <div>
-              <Label htmlFor="norm">normalize</Label>
-              <p className="text-xs text-muted-foreground">
-                false 时完全保留数字/URL/周边文本（音素模板场景）
-              </p>
-            </div>
-            <Switch
-              id="norm"
-              checked={form.normalize ?? true}
-              onCheckedChange={(c) => set("normalize", c)}
-            />
-          </div>
+          <ToggleRow
+            id="cop"
+            label="condition_on_previous_chunks"
+            hint="默认 true"
+            checked={form.condition_on_previous_chunks ?? true}
+            onChange={(c) => set("condition_on_previous_chunks", c)}
+          />
+          <ToggleRow
+            id="norm"
+            label="normalize"
+            hint="false 时完全保留数字/URL/周边文本（音素模板场景）"
+            checked={form.normalize ?? true}
+            onChange={(c) => set("normalize", c)}
+          />
         </AccordionContent>
       </AccordionItem>
     </Accordion>
@@ -321,6 +307,30 @@ export function TtsAdvancedSettings({ form, setForm }: Props) {
 
 function allowedRatesFor(format: string): number[] {
   return SAMPLE_RATES_BY_FORMAT[format] || [44100];
+}
+
+function ToggleRow({
+  id,
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onChange: (c: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-2.5">
+      <div className="min-w-0">
+        <Label htmlFor={id}>{label}</Label>
+        {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
+      </div>
+      <Switch id={id} checked={checked} onCheckedChange={onChange} />
+    </div>
+  );
 }
 
 function SliderRow({
@@ -340,7 +350,6 @@ function SliderRow({
   onChange: (v: number) => void;
   display: (v: number) => string;
 }) {
-  // Use a local input fallback for precise typing.
   return (
     <div className="grid gap-1.5">
       <div className="flex items-center justify-between">

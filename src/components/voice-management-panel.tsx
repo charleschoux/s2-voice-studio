@@ -53,6 +53,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Panel, PanelHeader, SectionLabel } from "./studio-primitives";
 import { cn, copyToClipboard } from "@/lib/utils";
 import { SORT_OPTIONS, MODEL_VISIBILITY } from "@/lib/constants";
 import {
@@ -70,35 +71,51 @@ import { useAppStore } from "@/lib/use-app-store";
 import { useHealth } from "@/lib/use-health";
 import { blobToBase64Client, mimeForFormat, extForFormat } from "@/lib/client-media";
 
+const SUB_NAV = [
+  { k: "library", label: "模型库", en: "Library" },
+  { k: "clone", label: "持久克隆", en: "Clone" },
+  { k: "instant", label: "即时克隆", en: "Instant" },
+  { k: "manage", label: "我的模型", en: "Manage" },
+] as const;
+
+type SubKey = (typeof SUB_NAV)[number]["k"];
+
 export function VoiceManagementPanel() {
   const health = useHealth();
   const mock = health.mock || !health.hasApiKey;
-  const [sub, setSub] = React.useState<"library" | "clone" | "instant" | "manage">("library");
+  const [sub, setSub] = React.useState<SubKey>("library");
 
   return (
     <div className="space-y-4">
+      <Panel className="overflow-hidden">
+        <PanelHeader
+          title="Voice Library & Cloning"
+          zh="声音管理"
+          icon={<Mic className="h-3.5 w-3.5" />}
+        />
+        <div className="flex flex-wrap gap-1.5 p-2.5">
+          {SUB_NAV.map((n) => (
+            <Button
+              key={n.k}
+              size="sm"
+              variant={sub === n.k ? "default" : "outline"}
+              onClick={() => setSub(n.k)}
+              className="gap-2"
+            >
+              {sub === n.k && <span className="h-1.5 w-1.5 rounded-full bg-success" />}
+              <span>{n.label}</span>
+              <span className="text-[10px] font-normal text-muted-foreground">{n.en}</span>
+            </Button>
+          ))}
+        </div>
+      </Panel>
+
       {mock && (
-        <div className="rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+        <div className="flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning-foreground">
+          <span className="h-1.5 w-1.5 rounded-full bg-warning" />
           未配置 FISH_API_KEY 或已开启 Mock。声音管理接口将无法真实调用，可浏览界面但需配置 Key 后才能克隆/管理。
         </div>
       )}
-      <div className="flex flex-wrap gap-1.5">
-        {([
-          ["library", "模型库"],
-          ["clone", "持久克隆"],
-          ["instant", "即时克隆"],
-          ["manage", "我的模型管理"],
-        ] as const).map(([k, label]) => (
-          <Button
-            key={k}
-            size="sm"
-            variant={sub === k ? "default" : "outline"}
-            onClick={() => setSub(k)}
-          >
-            {label}
-          </Button>
-        ))}
-      </div>
 
       {sub === "library" && <LibrarySubPanel />}
       {sub === "clone" && <PersistentCloneForm />}
@@ -143,59 +160,58 @@ function LibrarySubPanel() {
   }, [run]);
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-end gap-2">
-        <div className="relative min-w-[180px] flex-1">
-          <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="按 title 搜索"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            className="pl-8"
-          />
+    <Panel className="overflow-hidden p-3.5 sm:p-4">
+      <div className="mb-3 space-y-2.5">
+        <SectionLabel hint={`${items.length} results`}>Search · 检索</SectionLabel>
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="relative min-w-[180px] flex-1">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="按 title 搜索"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <div className="w-36">
+            <Select value={lang || "all"} onValueChange={(v) => setLang(v === "all" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="语言" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部</SelectItem>
+                <SelectItem value="zh">中文</SelectItem>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="ja">日本語</SelectItem>
+                <SelectItem value="ko">한국어</SelectItem>
+                <SelectItem value="es">Español</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-36">
+            <Select value={sort} onValueChange={setSort}>
+              <SelectTrigger><SelectValue placeholder="排序" /></SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button variant="outline" size="icon" onClick={run} disabled={loading}>
+            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+          </Button>
         </div>
-        <div className="w-40">
-          <Select value={lang} onValueChange={setLang}>
-            <SelectTrigger>
-              <SelectValue placeholder="语言" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">全部</SelectItem>
-              <SelectItem value="zh">中文</SelectItem>
-              <SelectItem value="en">English</SelectItem>
-              <SelectItem value="ja">日本語</SelectItem>
-              <SelectItem value="ko">한국어</SelectItem>
-              <SelectItem value="es">Español</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-36">
-          <Select value={sort} onValueChange={setSort}>
-            <SelectTrigger>
-              <SelectValue placeholder="排序" />
-            </SelectTrigger>
-            <SelectContent>
-              {SORT_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <Button variant="outline" size="icon" onClick={run} disabled={loading}>
-          <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-        </Button>
       </div>
       {err && (
-        <p className="rounded-md border border-destructive/50 bg-destructive/5 px-2 py-1.5 text-xs text-destructive">
+        <p className="mb-3 rounded-md border border-destructive/40 bg-destructive/8 px-2 py-1.5 text-xs text-destructive">
           {err}
         </p>
       )}
-      <ScrollArea className="h-[60vh] rounded-md border">
+      <ScrollArea className="h-[60vh] rounded-md border border-border bg-card/30 scrollbar-thin">
         <div className="grid grid-cols-1 gap-2 p-2 md:grid-cols-2">
           {loading
-            ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-28 w-full" />)
+            ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)
             : items.length === 0
-              ? <p className="col-span-full px-2 py-8 text-center text-sm text-muted-foreground">没有匹配的模型</p>
+              ? <p className="col-span-full px-2 py-12 text-center text-sm text-muted-foreground">没有匹配的模型</p>
               : items.map((m) => (
                   <ModelCard
                     key={m._id}
@@ -210,7 +226,7 @@ function LibrarySubPanel() {
                 ))}
         </div>
       </ScrollArea>
-    </div>
+    </Panel>
   );
 }
 
@@ -253,36 +269,39 @@ function ModelCard({
   };
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border p-3">
+    <div className="flex flex-col gap-2.5 rounded-md border border-border bg-card/50 p-3 transition-colors hover:border-primary/30">
       <div className="flex items-start gap-2">
-        <div className="flex-1">
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded border border-border bg-card/60 text-primary">
+          <Mic className="h-3.5 w-3.5" />
+        </span>
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="font-medium">{model.title}</span>
+            <span className="truncate font-medium">{model.title}</span>
             {model.visibility && (
-              <Badge variant="outline" className="text-[10px]">{model.visibility}</Badge>
+              <Badge variant="mono" className="text-[9px]">{model.visibility}</Badge>
             )}
             {model.state && (
-              <Badge variant="secondary" className="text-[10px]">{model.state}</Badge>
+              <Badge variant="secondary" className="text-[9px]">{model.state}</Badge>
             )}
           </div>
-          <code className="block truncate text-[11px] text-muted-foreground">{model._id}</code>
+          <code className="mt-0.5 block truncate readout text-[11px] text-muted-foreground">{model._id}</code>
         </div>
-        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onFav}>
-          <Star className={cn("h-3.5 w-3.5", isFav && "fill-amber-400 text-amber-400")} />
+        <Button size="icon-sm" variant="ghost" onClick={onFav} aria-label="收藏">
+          <Star className={cn("h-3.5 w-3.5", isFav && "fill-warning text-warning")} />
         </Button>
       </div>
       <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
         {model.languages?.map((l) => (
-          <Badge key={l} variant="secondary" className="text-[10px]">{l}</Badge>
+          <Badge key={l} variant="mono" className="text-[9px]">{l}</Badge>
         ))}
-        {typeof model.task_count === "number" && <span>· {model.task_count} tasks</span>}
-        {typeof model.like_count === "number" && <span>· ♥ {model.like_count}</span>}
-        {typeof model.score === "number" && <span>· score {model.score.toFixed(2)}</span>}
+        {typeof model.task_count === "number" && <span className="readout">· {model.task_count} tasks</span>}
+        {typeof model.like_count === "number" && <span className="readout">· ♥ {model.like_count}</span>}
+        {typeof model.score === "number" && <span className="readout">· score {model.score.toFixed(2)}</span>}
       </div>
       {model.tags && model.tags.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {model.tags.slice(0, 4).map((t) => (
-            <Badge key={t} variant="outline" className="text-[10px]">#{t}</Badge>
+            <Badge key={t} variant="outline" className="text-[9px]">#{t}</Badge>
           ))}
         </div>
       )}
@@ -291,10 +310,11 @@ function ModelCard({
         <Button size="sm" variant="outline" onClick={togglePreview}>
           {previewing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
           试听
+          {previewing && <span className="ml-1 h-1.5 w-1.5 rounded-full bg-success" />}
         </Button>
         <Button
           size="sm"
-          variant="outline"
+          variant="ghost"
           onClick={() => {
             copyToClipboard(model._id).then(() => {
               setCopied(true);
@@ -303,7 +323,7 @@ function ModelCard({
             });
           }}
         >
-          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+          {copied ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
           复制 id
         </Button>
         <Button
@@ -371,21 +391,24 @@ function PersistentCloneForm() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <div className="space-y-3 rounded-md border p-4">
-        <h3 className="text-sm font-semibold">持久声音克隆 (POST /model)</h3>
-        <p className="text-xs text-muted-foreground">
+      <Panel className="space-y-3 p-4">
+        <div>
+          <h3 className="text-sm font-semibold tracking-tight">持久声音克隆</h3>
+          <code className="readout text-[10px] text-muted-foreground">POST /model</code>
+        </div>
+        <p className="text-xs leading-relaxed text-muted-foreground">
           multipart/form-data 由服务端组装；上传多段清晰参考音频（建议 10–30 秒/段），填写 title 即可。训练模式 fast。
         </p>
         <div className="grid gap-2">
-          <Label>title *</Label>
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">title *</Label>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
         <div className="grid gap-2">
-          <Label>description</Label>
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">description</Label>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
         <div className="grid gap-2">
-          <Label>visibility</Label>
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">visibility</Label>
           <Select value={visibility} onValueChange={(v) => setVisibility(v as typeof visibility)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -394,51 +417,33 @@ function PersistentCloneForm() {
           </Select>
         </div>
         <div className="grid gap-2">
-          <Label>tags (逗号分隔)</Label>
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">tags (逗号分隔)</Label>
           <Input value={tags} onChange={(e) => setTags(e.target.value)} />
         </div>
         <div className="grid gap-2">
-          <Label>texts (每行一段，可选)</Label>
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">texts (每行一段，可选)</Label>
           <Textarea value={texts} onChange={(e) => setTexts(e.target.value)} className="min-h-[80px]" />
         </div>
-        <div className="flex items-center justify-between rounded-md border px-3 py-2">
-          <Label htmlFor="enh">enhance_audio_quality</Label>
-          <Switch id="enh" checked={enhance} onCheckedChange={setEnhance} />
-        </div>
-        <div className="flex items-center justify-between rounded-md border px-3 py-2">
-          <Label htmlFor="gs">generate_sample</Label>
-          <Switch id="gs" checked={generateSample} onCheckedChange={setGenerateSample} />
-        </div>
-      </div>
-      <div className="space-y-3 rounded-md border p-4">
-        <h3 className="text-sm font-semibold">参考音频</h3>
-        <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-          <Upload className="mx-auto mb-2 h-6 w-6" />
-          <input
-            type="file"
-            multiple
-            accept="audio/*"
-            onChange={(e) => setFiles(Array.from(e.target.files || []))}
-          />
-        </div>
-        {files.length > 0 && (
-          <ul className="space-y-1 text-xs">
-            {files.map((f, i) => (
-              <li key={i} className="flex items-center justify-between rounded border px-2 py-1">
-                <span className="truncate">{f.name}</span>
-                <span className="text-muted-foreground">{(f.size / 1024).toFixed(1)} KB</span>
-              </li>
-            ))}
-          </ul>
-        )}
-        <Button onClick={submit} disabled={busy} className="w-full">
+        <ToggleRow label="enhance_audio_quality" checked={enhance} onChange={setEnhance} />
+        <ToggleRow label="generate_sample" checked={generateSample} onChange={setGenerateSample} />
+      </Panel>
+
+      <Panel className="space-y-3 p-4">
+        <h3 className="text-sm font-semibold tracking-tight">参考音频</h3>
+        <FileDrop
+          multiple
+          onChange={setFiles}
+          count={files.length}
+          list={files.map((f) => ({ name: f.name, size: f.size }))}
+        />
+        <Button onClick={submit} disabled={busy} className="w-full" size="lg">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           提交克隆
         </Button>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
           注意：克隆为独立计费/训练流程，请遵守 Fish Audio 使用条款，仅克隆你有权使用的声音。
         </p>
-      </div>
+      </Panel>
     </div>
   );
 }
@@ -507,27 +512,23 @@ function InstantCloneForm() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <div className="space-y-3 rounded-md border p-4">
-        <h3 className="text-sm font-semibold">即时克隆 (references via MessagePack)</h3>
-        <p className="text-xs text-muted-foreground">
-          上传 10–30 秒清晰参考音频 + 精确 transcript，通过 <code>references</code> 直接 TTS。JSON 不能传 raw binary，请求由服务端用 MessagePack 转发。
-        </p>
-        <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-          <Mic className="mx-auto mb-2 h-6 w-6" />
-          <input
-            type="file"
-            accept="audio/*"
-            onChange={(e) => setRefFile((e.target.files || [])[0] || null)}
-          />
+      <Panel className="space-y-3 p-4">
+        <div>
+          <h3 className="text-sm font-semibold tracking-tight">即时克隆</h3>
+          <code className="readout text-[10px] text-muted-foreground">references via MessagePack</code>
         </div>
-        {refFile && (
-          <p className="text-xs text-muted-foreground">
-            {refFile.name} · {(refFile.size / 1024).toFixed(1)} KB
-          </p>
-        )}
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          上传 10–30 秒清晰参考音频 + 精确 transcript，通过 <code className="readout text-foreground/80">references</code> 直接 TTS。JSON 不能传 raw binary，请求由服务端用 MessagePack 转发。
+        </p>
+        <FileDrop
+          onChange={(files) => setRefFile(files[0] || null)}
+          count={refFile ? 1 : 0}
+          list={refFile ? [{ name: refFile.name, size: refFile.size }] : []}
+          icon={<Mic className="h-6 w-6" />}
+        />
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
-            <Label>transcript (精确)</Label>
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">transcript (精确)</Label>
             <Button size="sm" variant="outline" onClick={runAsr} disabled={asrBusy || !refFile}>
               {asrBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mic className="h-3.5 w-3.5" />}
               用 ASR 识别
@@ -536,21 +537,28 @@ function InstantCloneForm() {
           <Textarea value={transcript} onChange={(e) => setTranscript(e.target.value)} placeholder="参考音频对应的精确文字" />
         </div>
         <div className="grid gap-2">
-          <Label>要合成的文本 *</Label>
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">要合成的文本 *</Label>
           <Textarea value={text} onChange={(e) => setText(e.target.value)} />
         </div>
-        <Button onClick={submit} disabled={busy}>
+        <Button onClick={submit} disabled={busy} size="lg">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
           即时克隆合成
         </Button>
         {err && <p className="text-xs text-destructive">{err}</p>}
-      </div>
-      <div className="space-y-3 rounded-md border p-4">
-        <h3 className="text-sm font-semibold">结果</h3>
+      </Panel>
+
+      <Panel className="space-y-3 p-4">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold tracking-tight">结果</h3>
+          {audioUrl && <span className="h-1.5 w-1.5 rounded-full bg-success" />}
+        </div>
         {audioUrl ? (
-          <audio src={audioUrl} controls className="w-full" />
+          <audio src={audioUrl} controls className="w-full rounded-md" />
         ) : (
-          <p className="py-8 text-center text-sm text-muted-foreground">合成后音频显示在这里</p>
+          <div className="clay-inset flex h-40 flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Mic className="h-5 w-5 opacity-50" />
+            <span>合成后音频显示在这里</span>
+          </div>
         )}
         {blob && (
           <Button
@@ -563,13 +571,13 @@ function InstantCloneForm() {
               a.click();
             }}
           >
-            下载
+            <Upload className="h-3.5 w-3.5" /> 下载
           </Button>
         )}
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
           ASR 为独立计费接口；即时克隆使用 TTS 计费（按 UTF-8 bytes）。
         </p>
-      </div>
+      </Panel>
     </div>
   );
 }
@@ -599,28 +607,31 @@ function ManageSubPanel() {
   }, [load]);
 
   return (
-    <div className="space-y-3">
+    <Panel className="space-y-3 p-3.5 sm:p-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">我的模型 (self=true)</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold tracking-tight">我的模型</h3>
+          <code className="readout text-[10px] text-muted-foreground">self=true</code>
+        </div>
         <Button size="sm" variant="outline" onClick={load} disabled={loading}>
           <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} /> 刷新
         </Button>
       </div>
       {err && (
-        <p className="rounded-md border border-destructive/50 bg-destructive/5 px-2 py-1.5 text-xs text-destructive">
+        <p className="rounded-md border border-destructive/40 bg-destructive/8 px-2 py-1.5 text-xs text-destructive">
           {err}
         </p>
       )}
-      <ScrollArea className="h-[60vh] rounded-md border">
+      <ScrollArea className="h-[60vh] rounded-md border border-border bg-card/30 scrollbar-thin">
         <div className="space-y-2 p-2">
           {loading
-            ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)
+            ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)
             : items.length === 0
-              ? <p className="px-2 py-8 text-center text-sm text-muted-foreground">没有你的模型</p>
+              ? <p className="px-2 py-12 text-center text-sm text-muted-foreground">没有你的模型</p>
               : items.map((m) => <ManageRow key={m._id} model={m} onChanged={load} />)}
         </div>
       </ScrollArea>
-    </div>
+    </Panel>
   );
 }
 
@@ -666,15 +677,18 @@ function ManageRow({ model, onChanged }: { model: VoiceModel; onChanged: () => v
   };
 
   return (
-    <div className="rounded-md border p-3">
+    <div className="rounded-md border border-border bg-card/50 p-3">
       <div className="flex items-start gap-2">
-        <div className="flex-1">
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded border border-border bg-card/60 text-primary">
+          <Mic className="h-3.5 w-3.5" />
+        </span>
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="font-medium">{model.title}</span>
-            {model.visibility && <Badge variant="outline" className="text-[10px]">{model.visibility}</Badge>}
-            {model.state && <Badge variant="secondary" className="text-[10px]">{model.state}</Badge>}
+            {model.visibility && <Badge variant="mono" className="text-[9px]">{model.visibility}</Badge>}
+            {model.state && <Badge variant="secondary" className="text-[9px]">{model.state}</Badge>}
           </div>
-          <code className="block truncate text-[11px] text-muted-foreground">{model._id}</code>
+          <code className="mt-0.5 block truncate readout text-[11px] text-muted-foreground">{model._id}</code>
         </div>
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
@@ -736,16 +750,74 @@ function ManageRow({ model, onChanged }: { model: VoiceModel; onChanged: () => v
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>取消</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={remove}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
+              <AlertDialogAction onClick={remove}>
                 确认删除
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
+    </div>
+  );
+}
+
+// ---------------- shared bits ----------------
+
+function ToggleRow({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (c: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-card/40 px-3 py-2">
+      <Label className="text-xs font-medium">{label}</Label>
+      <Switch checked={checked} onCheckedChange={onChange} />
+    </div>
+  );
+}
+
+function FileDrop({
+  multiple,
+  onChange,
+  count,
+  list,
+  icon,
+}: {
+  multiple?: boolean;
+  onChange: (files: File[]) => void;
+  count: number;
+  list: { name: string; size: number }[];
+  icon?: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground hover:bg-accent">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
+          {icon ?? <Upload className="h-5 w-5" />}
+        </span>
+        <span>点击选择参考音频{multiple ? " · 可多选" : ""}</span>
+        <input
+          type="file"
+          multiple={multiple}
+          accept="audio/*"
+          className="hidden"
+          onChange={(e) => onChange(Array.from(e.target.files || []))}
+        />
+      </label>
+      {count > 0 && (
+        <ul className="space-y-1 text-xs">
+          {list.map((f, i) => (
+            <li key={i} className="flex items-center justify-between gap-2 rounded border border-border bg-card/40 px-2 py-1">
+              <span className="truncate">{f.name}</span>
+              <span className="readout shrink-0 text-muted-foreground">{(f.size / 1024).toFixed(1)} KB</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

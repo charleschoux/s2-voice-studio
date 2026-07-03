@@ -4,11 +4,11 @@ import * as React from "react";
 import { Loader2, Play, Square, Package, ListOrdered } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -16,14 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAppStore } from "@/lib/use-app-store";
 import { runBatch, splitText, type BatchTaskState, type SplitMode } from "@/lib/batch";
 import { MAX_BATCH_CONCURRENCY } from "@/lib/constants";
 import type { TtsForm } from "@/lib/schemas";
-import { extForFormat, mimeForFormat } from "@/lib/client-media";
-import { downloadBlob, slugify, formatBytes } from "@/lib/utils";
+import { extForFormat } from "@/lib/client-media";
+import { cn, downloadBlob, slugify, formatBytes } from "@/lib/utils";
 import JSZip from "jszip";
 
 interface Props {
@@ -77,7 +75,6 @@ export function BatchPanel({ form, mock }: Props) {
           });
         },
       });
-      // Save to history.
       const okBlobs = blobs.filter(Boolean) as Blob[];
       await store.addHistory(
         {
@@ -163,7 +160,9 @@ export function BatchPanel({ form, mock }: Props) {
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label className="text-xs">拆分方式</Label>
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+            拆分方式
+          </Label>
           <Select
             value={splitMode}
             onValueChange={(v) => setSplitMode(v as SplitMode)}
@@ -179,7 +178,10 @@ export function BatchPanel({ form, mock }: Props) {
           </Select>
         </div>
         <div className="grid gap-2">
-          <Label className="text-xs">块大小 ({chunkSize})</Label>
+          <Label className="flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground">
+            <span>块大小</span>
+            <span className="readout text-primary normal-case">{chunkSize}</span>
+          </Label>
           <Slider
             value={[chunkSize]}
             min={100}
@@ -189,7 +191,12 @@ export function BatchPanel({ form, mock }: Props) {
           />
         </div>
         <div className="grid gap-2">
-          <Label className="text-xs">并发 ({concurrency}, max {MAX_BATCH_CONCURRENCY})</Label>
+          <Label className="flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground">
+            <span>并发</span>
+            <span className="readout text-primary normal-case">
+              {concurrency} / {MAX_BATCH_CONCURRENCY}
+            </span>
+          </Label>
           <Slider
             value={[concurrency]}
             min={1}
@@ -199,7 +206,10 @@ export function BatchPanel({ form, mock }: Props) {
           />
         </div>
         <div className="grid gap-2">
-          <Label className="text-xs">429 重试次数 ({maxRetries})</Label>
+          <Label className="flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground">
+            <span>429 重试次数</span>
+            <span className="readout text-primary normal-case">{maxRetries}</span>
+          </Label>
           <Slider
             value={[maxRetries]}
             min={0}
@@ -211,7 +221,7 @@ export function BatchPanel({ form, mock }: Props) {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="outline" className="text-[10px]">
+        <Badge variant="outline" className="gap-1">
           <ListOrdered className="h-3 w-3" /> {preview.length} 块
         </Badge>
         {!running ? (
@@ -226,48 +236,46 @@ export function BatchPanel({ form, mock }: Props) {
         <Button size="sm" variant="outline" onClick={exportZip} disabled={doneCount === 0}>
           <Package className="h-3.5 w-3.5" /> 导出 zip
         </Button>
-        {running && <Loader2 className="h-4 w-4 animate-spin" />}
+        {running && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
       </div>
 
       {tasks.length > 0 && (
         <>
           <Progress value={progress} />
-          <div className="flex gap-2 text-xs text-muted-foreground">
-            <span>完成 {doneCount}</span>
-            <span>错误 {errCount}</span>
+          <div className="flex gap-3 readout text-[10px] text-muted-foreground">
+            <span><span className="text-success">●</span> 完成 {doneCount}</span>
+            <span><span className="text-destructive">●</span> 错误 {errCount}</span>
             <span>共 {tasks.length}</span>
           </div>
-          <ScrollArea className="h-48 rounded-md border">
+          <ScrollArea className="h-48 rounded-md border border-border bg-card/30 scrollbar-thin">
             <div className="p-2 space-y-1.5">
               {tasks.map((t) => (
                 <div
                   key={t?.id}
-                  className="flex items-center gap-2 rounded-md border px-2 py-1.5 text-xs"
+                  className="flex items-center gap-2 rounded-md border border-border bg-card/40 px-2 py-1.5 text-xs"
                 >
-                  <Badge
-                    variant={
+                  <span
+                    className={cn(
+                      "h-2 w-2 shrink-0 rounded-full",
                       t?.status === "done"
-                        ? "success"
+                        ? "bg-success"
                         : t?.status === "error"
-                          ? "destructive"
+                          ? "bg-destructive"
                           : t?.status === "retry"
-                            ? "warning"
-                            : "secondary"
-                    }
-                    className="text-[10px]"
-                  >
-                    {t?.status}
-                  </Badge>
-                  <span className="w-6 text-muted-foreground">{t?.index}</span>
+                            ? "bg-warning"
+                            : "bg-muted-foreground",
+                    )}
+                  />
+                  <span className="w-6 readout text-muted-foreground">{t?.index}</span>
                   <span className="flex-1 truncate">{t?.text}</span>
                   {t?.attempts ? (
-                    <span className="text-muted-foreground">×{t.attempts}</span>
+                    <span className="readout text-muted-foreground">×{t.attempts}</span>
                   ) : null}
                   {t?.audioBlob && (
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-6 text-[10px]"
+                      className="h-6 text-[10px] readout"
                       onClick={() =>
                         t.audioUrl &&
                           downloadBlob(
@@ -286,13 +294,13 @@ export function BatchPanel({ form, mock }: Props) {
         </>
       )}
 
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
         遇到 429 / 5xx 时指数退避重试；导出 zip 包含音频、metadata.json、payload.json。
       </p>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span>统一音频格式</span>
-        <Badge variant="outline" className="text-[10px]">{form.format}</Badge>
-        <span className="ml-auto">{mock ? "mock 模式" : "真实调用"}</span>
+        <span>FORMAT</span>
+        <Badge variant="mono" className="text-[9px]">{form.format}</Badge>
+        <span className="ml-auto readout">{mock ? "mock 模式" : "真实调用"}</span>
       </div>
     </div>
   );

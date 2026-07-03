@@ -1,6 +1,28 @@
 import type { Metadata, Viewport } from "next";
+import { Plus_Jakarta_Sans, Roboto_Mono, Lora } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "@/components/providers/app-providers";
+
+const sans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const serif = Lora({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  weight: ["400", "500", "600"],
+  display: "swap",
+});
+
+const mono = Roboto_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  weight: ["400", "500"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "S2 Voice Studio — Fish Audio TTS Workbench",
@@ -12,10 +34,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b1120" },
-  ],
+  themeColor: "#ece7dc",
 };
 
 export default function RootLayout({
@@ -25,7 +44,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body
+        className={`${sans.variable} ${serif.variable} ${mono.variable} min-h-screen bg-background font-sans text-foreground antialiased`}
+      >
         <AppProviders>{children}</AppProviders>
       </body>
     </html>
